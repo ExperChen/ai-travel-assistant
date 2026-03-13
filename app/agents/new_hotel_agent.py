@@ -2,8 +2,7 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import SystemMessage
+from langchain.agents import create_agent
 import sys
 from pathlib import Path
 
@@ -47,24 +46,32 @@ def run_hotel_agent(user_query: str):
     tools = [search_hotels]
 
     # 3. Modern System Prompt
-    system_message = SystemMessage(content="""You are a premium travel consultant. 
+    system_prompt = """You are a premium travel consultant. 
     Your task is to fetch hotel data using tools, then filter them strictly based on user requirements.
     Always provide: Hotel Name, Price, Rating, Address, and a compelling reason for recommendation.
-    """)
+    """
 
-    # 4. Construct the Next-Gen LangGraph Agent
-    agent_executor = create_react_agent(llm, tools, prompt=system_message)
+    # 4. Construct the latest LangChain Agent (built on LangGraph runtime)
+    agent_executor = create_agent(
+        model=llm,
+        tools=tools,
+        system_prompt=system_prompt,
+    )
 
     # 5. Execute
     print(f"\n🚀 Planning for: {user_query}\n")
     
     try:
-        result = agent_executor.invoke({"messages": [("user", user_query)]})
+        result = agent_executor.invoke({"messages": [{"role": "user", "content": user_query}]})
     except Exception as e:
         if use_google and _is_quota_exhausted_error(e):
             llm = _build_llm(False)
-            agent_executor = create_react_agent(llm, tools, prompt=system_message)
-            result = agent_executor.invoke({"messages": [("user", user_query)]})
+            agent_executor = create_agent(
+                model=llm,
+                tools=tools,
+                system_prompt=system_prompt,
+            )
+            result = agent_executor.invoke({"messages": [{"role": "user", "content": user_query}]})
         else:
             raise
     raw_content = result["messages"][-1].content
@@ -72,14 +79,13 @@ def run_hotel_agent(user_query: str):
     # Smart unpack: strip complex signature structures and extract pure text
     final_answer = ""
     if isinstance(raw_content, list):
-        # If data is wrapped in a list
-        first_item = raw_content[0]
-        if isinstance(first_item, list):  # Handle nested lists
-            final_answer = first_item[0].get("text", str(raw_content))
-        elif isinstance(first_item, dict):
-            final_answer = first_item.get("text", str(raw_content))
-        else:
-            final_answer = str(raw_content)
+        content_parts = []
+        for item in raw_content:
+            if isinstance(item, dict):
+                content_parts.append(item.get("text", ""))
+            else:
+                content_parts.append(str(item))
+        final_answer = "".join(content_parts) if content_parts else str(raw_content)
     else:
         # If it's already a string
         final_answer = str(raw_content)

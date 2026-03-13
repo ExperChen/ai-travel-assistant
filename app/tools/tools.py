@@ -56,10 +56,19 @@ def travel_planner(query: str) -> str:
     - 输入：目的地、天数、预算、偏好等
     - 输出：包含「行程规划」「每天安排」「简要预算建议」
     """
-    provider = os.getenv("LLM_PROVIDER", "").lower()
-    if provider == "google" or os.getenv("GOOGLE_API_KEY"):
+    def is_quota_exhausted_error(exc: Exception) -> bool:
+        text = str(exc)
+        return (
+            "RESOURCE_EXHAUSTED" in text
+            or "Quota exceeded" in text
+            or "You exceeded your current quota" in text
+            or "generate_content_free_tier_requests" in text
+        )
+
+    use_google = bool(os.getenv("GOOGLE_API_KEY"))
+    if use_google:
         llm = ChatGoogleGenerativeAI(
-            model=os.getenv("GOOGLE_LLM_MODEL", "gemini-1.5-flash"),
+            model=os.getenv("GOOGLE_LLM_MODEL", "gemini-2.5-flash"),
             api_key=os.getenv("GOOGLE_API_KEY"),
             temperature=0.2,
         )
@@ -85,4 +94,15 @@ def travel_planner(query: str) -> str:
 - 结合用户偏好（美食/动漫/文化等）
 - 预算给出区间或均值建议，并说明简单理由
 """
-    return llm.invoke(prompt).content
+    try:
+        return llm.invoke(prompt).content
+    except Exception as e:
+        if use_google and is_quota_exhausted_error(e):
+            llm = ChatOpenAI(
+                model=os.getenv("COMPANY_LLM_MODEL", "gpt-4o-mini"),
+                base_url=os.getenv("COMPANY_BASE_URL"),
+                api_key=os.getenv("COMPANY_API_KEY"),
+                temperature=0.2,
+            )
+            return llm.invoke(prompt).content
+        raise

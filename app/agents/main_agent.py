@@ -15,19 +15,30 @@ if str(TOOLS_DIR) not in sys.path:
 from attraction_tool import attraction_information_tool
 
 load_dotenv()
-provider = os.getenv("LLM_PROVIDER", "").lower()
 
-if provider == "google" or os.getenv("GOOGLE_API_KEY"):
-    llm = ChatGoogleGenerativeAI(
-        model=os.getenv("GOOGLE_LLM_MODEL"),
-        api_key=os.getenv("GOOGLE_API_KEY"),
+def _is_quota_exhausted_error(exc: Exception) -> bool:
+    text = str(exc)
+    return (
+        "RESOURCE_EXHAUSTED" in text
+        or "Quota exceeded" in text
+        or "You exceeded your current quota" in text
+        or "generate_content_free_tier_requests" in text
     )
-else:
-    llm = ChatOpenAI(
+
+def _build_llm(use_google: bool):
+    if use_google and os.getenv("GOOGLE_API_KEY"):
+        return ChatGoogleGenerativeAI(
+            model=os.getenv("GOOGLE_LLM_MODEL", "gemini-2.5-flash"),
+            api_key=os.getenv("GOOGLE_API_KEY"),
+        )
+    return ChatOpenAI(
         model=os.getenv("COMPANY_LLM_MODEL", "gpt-4o-mini"),
         base_url=os.getenv("COMPANY_BASE_URL"),
         api_key=os.getenv("COMPANY_API_KEY"),
     )
+
+use_google = bool(os.getenv("GOOGLE_API_KEY"))
+llm = _build_llm(use_google)
 
 
 
@@ -134,7 +145,19 @@ while True:
         # message[-1] 是最后一条消息，通常是 AI 回复
 
     except Exception as e:
-        output = f"调用失败: {e}"
+        if use_google and _is_quota_exhausted_error(e):
+            use_google = False
+            llm = _build_llm(use_google)
+            agent = create_agent(
+                llm,
+                tools=[attraction_information_tool],
+                system_prompt=system_prompt,
+            )
+            result = agent.invoke({"messages": [("user", text)]})
+            messages = result.get("messages", [])
+            output = messages[-1].content if messages else "无回复"
+        else:
+            output = f"调用失败: {e}"
     print("\n=== 旅行规划结果 ===")
     print(output)
     print("====================\n")

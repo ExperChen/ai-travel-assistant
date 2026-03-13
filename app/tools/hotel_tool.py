@@ -1,10 +1,34 @@
 import os
 import re
+from urllib.parse import quote_plus
 from serpapi import GoogleSearch
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 
 load_dotenv()
+
+
+def _pick_hotel_image_url(hotel: dict) -> str:
+    for key in ("thumbnail", "image", "image_url"):
+        value = str(hotel.get(key, "")).strip()
+        if value.startswith("http"):
+            return value
+
+    images = hotel.get("images") or hotel.get("photos") or []
+    if isinstance(images, list):
+        for item in images:
+            if isinstance(item, str):
+                value = item.strip()
+                if value.startswith("http"):
+                    return value
+            if isinstance(item, dict):
+                for key in ("original", "thumbnail", "original_image", "image"):
+                    value = str(item.get(key, "")).strip()
+                    if value.startswith("http"):
+                        return value
+
+    return ""
+
 
 @tool
 def search_hotels(location: str, check_in_date: str, check_out_date: str) -> list:
@@ -38,8 +62,7 @@ def search_hotels(location: str, check_in_date: str, check_out_date: str) -> lis
 
         hotel_list = []
         
-        # 🚨 SMART LIMIT: Only process the top 3 hotels to save API credits!
-        top_hotels = properties[:3]
+        top_hotels = properties[:10]
         
         print(f"🔍 [Step 2] Fetching exact addresses for the top {len(top_hotels)} hotels...")
 
@@ -66,17 +89,23 @@ def search_hotels(location: str, check_in_date: str, check_out_date: str) -> lis
                 "api_key": api_key,
                 "hl": "en"
             }
+            map_source_url = f"https://www.google.com/maps/search/{quote_plus(f'{hotel_name}, {location}')}"
             try:
                 map_search = GoogleSearch(map_params)
                 map_results = map_search.get_dict()
                 
                 if "place_results" in map_results:
                     exact_address = map_results["place_results"].get("address", exact_address)
+                    map_source_url = map_results["place_results"].get("google_maps_url", map_source_url)
                 elif "local_results" in map_results and len(map_results["local_results"]) > 0:
                     exact_address = map_results["local_results"][0].get("address", exact_address)
+                    map_source_url = map_results.get("search_metadata", {}).get("google_maps_url", map_source_url)
             except Exception as e:
                 pass 
             # ----------------------------------------------
+
+            hotel_source_url = hotel.get("link", "")
+            image_url = _pick_hotel_image_url(hotel)
 
             hotel_list.append({
                 "name": hotel_name,
@@ -84,7 +113,10 @@ def search_hotels(location: str, check_in_date: str, check_out_date: str) -> lis
                 "numeric_price": numeric_price,
                 "rating": hotel.get("overall_rating", 0),
                 "reviews": hotel.get("reviews", 0),
-                "address": exact_address, 
+                "address": exact_address,
+                "hotel_source_url": hotel_source_url,
+                "map_source_url": map_source_url,
+                "image_url": image_url,
             })
             
         print(f"✅ Successfully processed {len(hotel_list)} hotels with real addresses!")
