@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # 自动加载环境变量，妈妈再也不用担心我弄丢秘钥了！
 load_dotenv()
 
-from app.transportation_tool import transportation_tool
+from app.tools.transportation_tool import transportation_tool
 
 def run_tests():
     # 提醒：确保你的 .env 文件里配置了 SERPAPI_API_KEY
