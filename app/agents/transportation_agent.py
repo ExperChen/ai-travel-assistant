@@ -1,52 +1,59 @@
 import os
-from langchain_openai import ChatOpenAI
+from langchain_community.chat_models import ChatZhipuAI
 from dotenv import load_dotenv
 
-# 导入你刚刚拆分出去的新工具
+# 导入你的多地点路径规划工具
 from app.tools.multi_route_tool import optimize_multi_location_route
 
-load_dotenv()
-
 # ==========================================
-# 终极架构：绕过 Agent 模块，直接底层 Tool Calling
+# 架构说明：使用 智谱 底层 Tool Calling
 # ==========================================
 def run_travel_agent(user_query: str):
     """自然语言对话入口"""
-    # 1. 初始化大模型
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    # 🌟 强制在此处重新加载一遍 .env，确保万无一失
+    load_dotenv()
     
-    # 2. 将工具直接“绑”在模型上（绕过所有复杂的 Agent 组装器）
+    # 🚨 保安规则更新：现在查的是智谱的钥匙！
+    api_key = os.getenv("ZHIPUAI_API_KEY")
+
+    if not api_key:
+        return '{"错误": "环境变量中未找到 ZHIPUAI_API_KEY，请确认 .env 文件内容。"}'
+    
+    # 1. 初始化智谱大模型 (修正了模型名称为 glm-4)
+    llm = ChatZhipuAI(
+        model="glm-4",  # 如果你需要传图功能再改成 glm-4v
+        temperature=0
+    )
+    
+    # 2. 将工具绑定到模型上
     llm_with_tools = llm.bind_tools([optimize_multi_location_route])
     
-    print(f"🌍 大模型正在分析你的自然语言: {user_query}")
+    print(f"🧠 智谱(GLM-4) 正在分析请求: {user_query}")
     
-    # 3. 让大模型直接处理自然语言，它会自动决定是否调用工具以及提取参数
+    # 3. 让模型解析用户意图
     ai_msg = llm_with_tools.invoke(user_query)
     
-    # 4. 拦截并处理工具调用
+    # 4. 拦截并处理工具调用逻辑
     if ai_msg.tool_calls:
-        print("⏳ 成功提取到地点，正在底层算力引擎中穷举最优路径...\n")
+        print("⚙️ 系统已提取地点，正在执行路径优化算法...\n")
         
-        # 提取大模型从你的话里抓出来的参数 (比如 ["王府井", "天安门", "颐和园"])
         tool_call = ai_msg.tool_calls[0]
         locations_arg = tool_call["args"]["locations"]
         
-        # 5. 直接运行我们的纯 Python 工具函数！
-        # optimize_multi_location_route.invoke 是调用 @tool 装饰器的标准方法
+        # 5. 调用底层工具函数计算结果
         result_json = optimize_multi_location_route.invoke({"locations": locations_arg})
         
-        # 直接把工具算出来的纯净中文 JSON 返回，不给大模型任何废话的机会
         return result_json
     else:
-        return '{"错误": "未能识别出需要规划的地点，请换个说法试试。"}'
+        return '{"错误": "未能识别出地点，请尝试详细说明地点名称。"}'
 
 # ==========================================
-# 测试运行
+# 测试入口
 # ==========================================
 if __name__ == "__main__":
     test_query = "我明天在北京，想去 王府井、天安门、颐和园 这三个地方，帮我算一下怎么走路上花的时间最少？返回json给我。"
     
     result = run_travel_agent(test_query)
     
-    print("🎯 最终纯净 JSON 输出：")
+    print("\n🎯 最终纯净 JSON 输出：")
     print(result)
