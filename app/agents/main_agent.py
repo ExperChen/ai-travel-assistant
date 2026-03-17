@@ -12,7 +12,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
 from tools import travel_planner, get_location_info, calculate_distance
 from attraction_tool import attraction_information_tool
-from transport_tool import transport_search_tool
+from flight_tool import search_and_filter_flights
+
 load_dotenv()
 
 def build_agent():
@@ -49,7 +50,7 @@ def build_agent():
     # create_agent 是 LangChain 0.2+ 的新工厂方法，返回一个 CompiledStateGraph (LangGraph)
     agent = create_agent(
         llm,
-        tools=[travel_planner, get_location_info, calculate_distance, attraction_information_tool, transport_search_tool],
+        tools=[travel_planner, get_location_info, calculate_distance, attraction_information_tool, search_and_filter_flights,],
         system_prompt=prompt,
     )
     return agent
