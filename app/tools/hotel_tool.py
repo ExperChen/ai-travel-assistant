@@ -38,6 +38,10 @@ def search_hotels(location: str, check_in_date: str, check_out_date: str) -> lis
             clean_num = re.sub(r'[^\d.]', '', raw_price)
             numeric_price = float(clean_num) if clean_num else 0.0
 
+            hotel_name = hotel.get("name", "Hotel")
+            
+            fallback_map = f"https://www.google.com/maps/search/?api=1&query={hotel_name.replace(' ', '+')}"
+            
             hotel_list.append({
                 "name": hotel.get("name"), 
                 "location": hotel.get("address", "Exact address via Maps..."),
@@ -45,8 +49,8 @@ def search_hotels(location: str, check_in_date: str, check_out_date: str) -> lis
                 "leave_date": check_out_date,
                 "price": numeric_price,
                 "rating": hotel.get("overall_rating", 0.0), 
-                "map_source": hotel.get("gps_coordinates", {}).get("link", "https://maps.google.com"),
-                "hotel_source": hotel.get("link", "https://www.google.com/hotels")
+                "map_source": hotel.get("gps_coordinates", {}).get("link") or fallback_map,
+                "hotel_source": hotel.get("link") or "https://www.google.com/hotels"
             })
         return hotel_list
     except Exception as e:
