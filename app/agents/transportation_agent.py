@@ -51,8 +51,7 @@ def run_travel_agent(user_query: str):
 # 测试入口
 # ==========================================
 if __name__ == "__main__":
-    test_query = "我明天在北京，想去 王府井、天安门、颐和园 这三个地方，帮我算一下怎么走路上花的时间最少？返回json给我。"
-    
+    test_query = "I am in Beijing tomorrow. I want to visit Wangfujing, Tiananmen Square, and the Summer Palace. Please calculate the route and time. You MUST output the final result in pure JSON format with all keys and values in English."
     result = run_travel_agent(test_query)
     
     print("\n🎯 最终纯净 JSON 输出：")
