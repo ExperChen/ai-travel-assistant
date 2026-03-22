@@ -10,49 +10,51 @@ from app.tools.multi_route_tool import optimize_multi_location_route
 # ==========================================
 def run_travel_agent(user_query: str):
     """自然语言对话入口"""
-    # 🌟 强制在此处重新加载一遍 .env，确保万无一失
     load_dotenv()
     
-    # 🚨 保安规则更新：现在查的是智谱的钥匙！
     api_key = os.getenv("ZHIPUAI_API_KEY")
-
     if not api_key:
-        return '{"错误": "环境变量中未找到 ZHIPUAI_API_KEY，请确认 .env 文件内容。"}'
+        return '{"error": "ZHIPUAI_API_KEY not found in .env"}'
     
-    # 1. 初始化智谱大模型 (修正了模型名称为 glm-4)
-    llm = ChatZhipuAI(
-        model="glm-4",  # 如果你需要传图功能再改成 glm-4v
-        temperature=0
-    )
-    
-    # 2. 将工具绑定到模型上
+    # 1. 初始化智谱大模型
+    llm = ChatZhipuAI(model="glm-4", temperature=0)
     llm_with_tools = llm.bind_tools([optimize_multi_location_route])
     
-    print(f"🧠 智谱(GLM-4) 正在分析请求: {user_query}")
+    print(f" 智谱(GLM-4) 正在分析请求...")
     
-    # 3. 让模型解析用户意图
+    # 2. 让模型解析用户意图，决定是否调用工具
     ai_msg = llm_with_tools.invoke(user_query)
     
-    # 4. 拦截并处理工具调用逻辑
     if ai_msg.tool_calls:
-        print("⚙️ 系统已提取地点，正在执行路径优化算法...\n")
-        
+        print(" 系统已提取地点，正在执行底层算法...\n")
         tool_call = ai_msg.tool_calls[0]
         locations_arg = tool_call["args"]["locations"]
         
-        # 5. 调用底层工具函数计算结果
-        result_json = optimize_multi_location_route.invoke({"locations": locations_arg})
+        # 3. 调用底层工具（拿到的是中文硬编码结果）
+        raw_chinese_result = optimize_multi_location_route.invoke({"locations": locations_arg})
         
-        return result_json
+        # 🌟 4. 核心修复：把中文结果丢回给大脑，强制要求全英文翻译！
+        print(" 正在将计算结果转换为纯英文 JSON...")
+        translation_prompt = f"""
+        Here is the raw route calculation result: {raw_chinese_result}
+        CRITICAL INSTRUCTION: 
+        1. Translate ALL information (keys and values) into professional English.
+        2. Output ONLY a valid, pure JSON object. Absolutely NO markdown formatting blocks like ```json and NO extra text.
+        """
+        
+        # 让大脑做最后一步翻译工作
+        final_msg = llm.invoke(translation_prompt)
+        
+        return final_msg.content
     else:
-        return '{"错误": "未能识别出地点，请尝试详细说明地点名称。"}'
+        return '{"error": "Failed to extract locations from your query."}'
 
 # ==========================================
 # 测试入口
 # ==========================================
 if __name__ == "__main__":
-    test_query = "I am in Beijing tomorrow. I want to visit Wangfujing, Tiananmen Square, and the Summer Palace. Please calculate the route and time. You MUST output the final result in pure JSON format with all keys and values in English."
+    test_query = "I am in Beijing tomorrow. I want to visit Wangfujing, Tiananmen Square, and the Summer Palace. Please calculate the route and time."
     result = run_travel_agent(test_query)
     
-    print("\n🎯 最终纯净 JSON 输出：")
+    print("\n 最终纯净 JSON 输出：")
     print(result)
