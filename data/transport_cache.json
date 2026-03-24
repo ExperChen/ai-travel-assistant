@@ -1,0 +1,48 @@
+{
+  "klia::to::klcc::via::transit": {
+    "origin": "KLIA",
+    "destination": "KLCC",
+    "overall_estimated_price": "RM 13 - RM 21",
+    "routes": [
+      {
+        "plan_name": "🚗 驾车/打车 (常规路线)",
+        "total_duration": "52分钟",
+        "distance": "59.7 公里"
+      },
+      {
+        "plan_name": "🚆 最佳公共交通",
+        "total_duration": "5 小时 18分钟",
+        "distance": "62.6 公里"
+      }
+    ]
+  },
+  "narita airport::to::tokyo station::via::train": {
+    "origin": "Narita Airport",
+    "destination": "Tokyo Station",
+    "overall_estimated_price": "¥1,500 - ¥2,700",
+    "routes": [
+      {
+        "plan_name": "🚗 驾车/打车 (常规路线)",
+        "total_duration": "50分钟",
+        "distance": "67.3 公里"
+      },
+      {
+        "plan_name": "🚆 最佳公共交通",
+        "total_duration": "1 小时 33分钟",
+        "distance": "66.5 公里"
+      }
+    ]
+  },
+  "beijing capital international airport::to::tiananmen square::via::transit": {
+    "origin": "Beijing Capital International Airport",
+    "destination": "Tiananmen Square",
+    "overall_estimated_price": "$4",
+    "routes": [
+      {
+        "plan_name": "🚗 驾车/打车 (常规路线)",
+        "total_duration": "34分钟",
+        "distance": "30.3 公里"
+      }
+    ]
+  }
+}
