@@ -4,10 +4,9 @@ import { storeToRefs } from 'pinia'
 import { useItineraryStore } from '../stores/itinerary'
 
 const store = useItineraryStore()
-const { request, ui } = storeToRefs(store)
+const { request, ui, raw } = storeToRefs(store)
 
 const destinationDraft = ref('')
-const attractionDraft = ref('')
 
 const addDestination = () => {
   const value = destinationDraft.value.trim()
@@ -18,17 +17,6 @@ const addDestination = () => {
 
 const removeDestination = (idx) => {
   request.value.destination.splice(idx, 1)
-}
-
-const addAttraction = () => {
-  const value = attractionDraft.value.trim()
-  if (!value) return
-  if (!request.value.mustVisitAttractions.includes(value)) request.value.mustVisitAttractions.push(value)
-  attractionDraft.value = ''
-}
-
-const removeAttraction = (idx) => {
-  request.value.mustVisitAttractions.splice(idx, 1)
 }
 
 const isValid = computed(() => {
@@ -47,6 +35,8 @@ const isValid = computed(() => {
 
 const submitError = ref('')
 
+const recommendedViews = computed(() => (Array.isArray(raw.value?.views) ? raw.value.views : []))
+
 const onGenerate = async () => {
   submitError.value = ''
   try {
@@ -63,7 +53,6 @@ const onGenerate = async () => {
         start_date: request.value.time.start_date,
         end_date: request.value.time.end_date,
       },
-      mustVisitAttractions: request.value.mustVisitAttractions.map((t) => t.trim()).filter(Boolean),
     })
   } catch (e) {
     submitError.value = String(e?.message || ui.value.error || 'Request failed.')
@@ -182,42 +171,6 @@ const onGenerate = async () => {
           </label>
         </div>
 
-        <div>
-          <div class="mb-1 text-[11px] uppercase tracking-[0.2em] text-[var(--dim)]">Must Visit Attractions</div>
-          <div class="flex gap-2">
-            <input
-              v-model="attractionDraft"
-              class="flex-1 border border-[var(--line)] bg-transparent px-3 py-2 text-[13px] outline-none focus:border-[var(--line-strong)]"
-              placeholder="The Grand Palace"
-              @keydown.enter.prevent="addAttraction"
-            />
-            <button
-              type="button"
-              class="border border-[var(--line)] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[var(--muted)] hover:border-[var(--line-strong)] hover:text-[var(--chalk)]"
-              @click="addAttraction"
-            >
-              Add
-            </button>
-          </div>
-          <div class="mt-2 flex flex-wrap gap-2">
-            <button
-              v-for="(t, idx) in request.mustVisitAttractions"
-              :key="t + idx"
-              type="button"
-              class="group flex items-center gap-2 border border-[var(--line)] bg-[rgba(10,10,10,0.6)] px-2 py-1 text-[12px] text-[var(--muted)] hover:border-[var(--line-strong)]"
-              @click="removeAttraction(idx)"
-            >
-              <span>{{ t }}</span>
-              <span class="text-[10px] text-[rgba(244,244,245,0.42)] group-hover:text-[rgba(244,244,245,0.7)]"
-                >×</span
-              >
-            </button>
-          </div>
-          <div v-if="request.mustVisitAttractions.length === 0" class="mt-2 text-[12px] text-[rgba(244,244,245,0.38)]">
-            Leave blank for AI serendipity...
-          </div>
-        </div>
-
         <div class="pt-1">
           <button
             type="button"
@@ -231,6 +184,24 @@ const onGenerate = async () => {
         </div>
         <div v-if="submitError" class="border border-[var(--line)] bg-[rgba(10,10,10,0.6)] px-3 py-2 text-[12px] text-[rgba(244,244,245,0.82)]">
           {{ submitError }}
+        </div>
+
+        <div class="border border-[var(--line)] bg-[rgba(10,10,10,0.52)] p-3">
+          <div class="mb-2 text-[11px] uppercase tracking-[0.22em] text-[var(--dim)]">Recommended Attractions</div>
+          <div v-if="recommendedViews.length === 0" class="text-[12px] text-[rgba(244,244,245,0.42)]">
+            Generate an itinerary to see recommendations.
+          </div>
+          <div v-else class="flex flex-wrap gap-2">
+            <div
+              v-for="(v, idx) in recommendedViews"
+              :key="(v?.name || 'view') + '_' + idx"
+              class="border border-[var(--line)] bg-[rgba(10,10,10,0.62)] px-2 py-1 text-[12px] text-[rgba(244,244,245,0.78)]"
+              :title="v?.location || ''"
+            >
+              <span class="mr-2">{{ v?.name || 'View' }}</span>
+              <span v-if="v?.location" class="text-[rgba(244,244,245,0.5)]">{{ v.location }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

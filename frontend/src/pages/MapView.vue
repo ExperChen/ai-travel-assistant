@@ -6,8 +6,14 @@ import { useItineraryStore } from '../stores/itinerary'
 const store = useItineraryStore()
 const { raw } = storeToRefs(store)
 
-const hotels = computed(() => (Array.isArray(raw.value.hotels) ? raw.value.hotels : []))
-const views = computed(() => (Array.isArray(raw.value.views) ? raw.value.views : []))
+const hotels = computed(() => {
+  const list = Array.isArray(raw.value?.hotels) ? raw.value.hotels : []
+  return list.filter((h) => h && typeof h === 'object')
+})
+const views = computed(() => {
+  const list = Array.isArray(raw.value?.views) ? raw.value.views : []
+  return list.filter((v) => v && typeof v === 'object')
+})
 
 function normalizeEmbedUrl(mapSource) {
   const src = typeof mapSource === 'string' ? mapSource.trim() : ''

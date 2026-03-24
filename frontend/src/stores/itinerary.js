@@ -157,9 +157,6 @@ export const useItineraryStore = defineStore('itinerary', {
           budget: payload.budget,
           time: payload.time,
         }
-        if (Array.isArray(payload.mustVisitAttractions) && payload.mustVisitAttractions.length > 0) {
-          body.must_visit_attractions = payload.mustVisitAttractions
-        }
 
         this.appendAiLine({ level: 'agent', text: `> Agent: POST ${url || '/api/v1/agent/generate_itinerary'}` })
 
@@ -176,6 +173,7 @@ export const useItineraryStore = defineStore('itinerary', {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
           signal: controller.signal,
+          cache: 'no-store',
         })
 
         let json = null
@@ -230,4 +228,3 @@ export const useItineraryStore = defineStore('itinerary', {
     },
   },
 })
-
