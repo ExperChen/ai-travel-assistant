@@ -1,331 +1,339 @@
-# Github团队协作规则：
-# **一定一定在提交文件时不要提交.env中的api_key!!!** 
-1. 文件命名格式：
-    - 所有文件都要使用下划线命名法（snake_case）
-    - 例如：`google_flight_serpapi_test.py`
-2. 测试文件命名格式：
-    - 所有测试文件都要在 `tests/` 目录下
-    - 测试文件名要以 `test_` 开头，后跟被测试的文件名
-    - 例如：`test_google_flight_serpapi.py`
+# AI Travel Assistant
 
-## 以下是如何开始创建branch而不影响main中的代码，确认代码完成后创建pull request的流程：
-每次开始新任务时：
-```bash
-git checkout main
-git pull origin main
-git checkout -b feature/功能名
-```
-含义是：
+This is a full-stack AI travel assistant project.
 
-1️⃣ 切换到主分支
-2️⃣ 拉取最新代码
-3️⃣ 从最新的 main 创建新分支
+The backend is built with Python and FastAPI. It calls flight, hotel, and attraction tools and returns structured itinerary data. The frontend is built with Vue 3 and Vite. It lets users enter a travel request and displays both the AI summary and a timeline view of the trip.
 
-这样可以保证：
-```bash
-feature branch
-    ↑
-最新 main
-```
-不会基于旧代码开发。
+## 1. What This Project Does
 
-开发完成后的流程
+- Accepts a natural language travel request
+- Generates flight, hotel, and attraction results
+- Returns a natural language summary from the AI
+- Displays itinerary content in a frontend timeline
+- Supports running the attraction tool and the main agent separately
 
-团队成员提交 PR 前：
-```bash
-git add .
-git commit -m "Add login feature"
-git push origin feature/add-login
-```
+## 2. Project Structure
 
-然后在 GitHub：
-
-```bash
-feature/add-login → main
-``` 
-
-创建 Pull Request。
-## 将项目文件提交到github上时要发给其他成员工具的核心逻辑说明！
-**需要包含：**
-1. 核心逻辑
-2. 如何使用
-3. 程序执行流程
-4. 输出结果结构
-5. 当前运行结果说明
-**参照attraction_tool_explanation.pdf**
-
-安装虚拟环境和依赖请参考Install_venv_and_dependencies.md
-
-以下链接是指导如何操作github的：
-https://github.com/firstcontributions/first-contributions/blob/main/docs/translations/README.zh-cn.md
-
-很多API可以在https://serpapi.com/google-images-api 中获取
-
-请在本地环境变量中配置。
-
-如有其他问题有待补充则后续补充
-
-以下为GPT生成的内容：
----
-
-# 🚀 一、基础协作规则（必须遵守）
-
----
-
-## 1️⃣ 不要直接往 main 分支推代码
-
-正确流程：
-
-```
-main  ← 稳定版本
-  ↑
-feature/xxx 分支开发
-```
-
-每个人：
-
-```powershell
-git checkout -b feature/add-flight-search
-```
-
-开发完：
-
-```powershell
-git push origin feature/add-flight-search
-```
-
-然后在 GitHub 上发 **Pull Request（PR）**
-
-👉 审核通过再合并进 main。
-
-这样可以避免：
-
-- 覆盖别人代码
-    
-- 把 bug 直接带进主分支
-    
-- 项目崩掉
-    
-
----
-
-## 2️⃣ Commit 要小而清晰，且每写一个功能 commit 一次！
-
-❌ 不要这样：
-
-```
-update
-fix
-修改代码
-```
-
-✅ 要这样：
-
-```
-add hotel recommendation module
-fix weather api timeout issue
-refactor agent workflow structure
-```
-
-规则：
-
-- 一次 commit 只做一件事
-    
-- 信息写清楚改了什么
-    
-
----
-
-## 3️⃣ 永远 pull 再 push
-
-每天开始工作前：
-
-```powershell
-git pull origin main
-```
-
-否则很容易：
-
-- 冲突
-    
-- 覆盖别人代码
-    
-
----
-
-# 🧠 二、进阶团队规范（推荐）
-
----
-
-## 4️⃣ 使用分支命名规范
-
-推荐统一格式：
-
-```
-feature/功能名
-fix/问题名
-refactor/模块名
-docs/文档更新
-```
-
-例如：
-
-```
-feature/ai-route-planner
-fix/login-bug
-```
-
-项目一大，没有规范会非常混乱。
-
----
-
-## 5️⃣ Pull Request 要写清楚
-
-PR 描述应该写：
-
-- 做了什么
-    
-- 为什么做
-    
-- 是否影响其他模块
-    
-- 测试结果
-    
-
-示例：
-
-```
-This PR adds flight search functionality using Amadeus API.
-Tested with 5 sample routes.
-No breaking changes.
-```
-
----
-
-## 6️⃣ Code Review 规则
-
-团队里至少：
-
-- 1 个人 review
-    
-- 才允许 merge
-    
-
-Review 关注：
-
-- 是否有重复代码
-    
-- 是否影响现有逻辑
-    
-- 命名是否清晰
-    
-- 是否符合项目结构
-    
-
-这一步会极大提升项目质量。
-
----
-
-# 📁 三、项目结构统一（非常重要）
-
-你做 AI 旅游助手这类项目，建议结构：
-
-```
-ai-travel-assistant/
-│
+```text
+ai-travel-assistant-with-frontend/
 ├── app/
-│   ├── agent/
-│   ├── tools/
-│   ├── services/
-│
-├── tests/
-├── requirements.txt
-├── .gitignore
+│   ├── agents/               # Main agent workflows
+│   ├── tools/                # Flight, hotel, and attraction tools
+│   ├── tests/                # Test scripts
+│   ├── config.py
+│   └── server.py             # FastAPI backend entry
+├── frontend/                 # Vue + Vite frontend
+├── requirements.txt          # Python dependencies
+├── Install_venv_and_dependencies.md
 └── README.md
 ```
 
-不要：
+## 3. Environment Requirements
 
-```
-main.py
-main2.py
-test_new.py
-final_version.py
-final_version_v2.py
-```
+### Backend
 
-那是灾难 😄
+- Python 3.11 is recommended
+- The current project docs were also written with Python 3.11 in mind
+- If your machine uses Python 3.13, you can try it first; if dependency issues appear, switch to Python 3.11
 
----
+### Frontend
 
-# ⚠️ 四、绝对禁止的行为
+- Node.js 22.x LTS is recommended
 
-- ❌ 不写 .gitignore
-    
-- ❌ 把 venv 提交上去
-    
-- ❌ 强制 push（git push -f）
-    
-- ❌ 直接改 main
-    
-- ❌ 不写 commit message
+## 4. Required Environment Variables
 
+Create a `.env` file in the project root, or set these values in your system environment:
 
-## 🎨 前端部分 (Frontend)
-本项目前端基于 Vue.js + Vite 构建。
-
-### 快速启动
-1. `cd frontend`
-2. `npm install`
-3. `npm run dev`
-
-更多详细的环境配置与开发规范，请参阅 [前端说明文档](./frontend/README.md)。
-
-
-## 景点信息工具（Attraction Information Tool）
-
-### 1) 环境变量配置
-请在本地环境变量或 `.env` 中配置：
-
-```bash
+```env
 SERPAPI_API_KEY=your_serpapi_key
+GOOGLE_API_KEY=your_google_api_key
+GOOGLE_LLM_MODEL=gemini-2.5-flash
 ```
 
-> 注意：不要提交真实 key 到仓库。
+Optional variables:
 
-### 2) 工具位置与能力
-- 文件：`app/tools/attraction_tool.py`
-- 核心函数：`get_attraction_info(attraction_name: str, location: str | None = None) -> dict`
-- 返回字段：
-  - `name`
-  - `image_url`
-  - `opening_hours`
-  - `visit_duration`
-  - `ticket_price`
-  - `sources`（至少保留 3 条可追溯来源）
-- 搜索引擎：SerpAPI Google Search + Google Images
-- 查询策略：
-  - `{name} opening hours`
-  - `{name} ticket price`
-  - `{name} how long to spend`
-  - `{name} official website`
+```env
+ATTRACTION_TOOL_DEBUG=0
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_PROJECT=flight-agent
+```
 
-### 3) 缓存说明
-- 使用本地 JSON 缓存：`app/tools/attraction_cache.json`
-- 相同景点与 location 的重复请求会直接命中缓存，减少 API 调用。
+Recommended frontend variables in `frontend/.env.local`:
 
-### 4) 运行最小 demo
-```bash
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_USE_MOCK=0
+VITE_DEMO_SEED=0
+```
+
+Notes:
+
+- `SERPAPI_API_KEY` is required for flight, hotel, and attraction search
+- `GOOGLE_API_KEY` is used by the main agent and part of the attraction workflow
+- `GOOGLE_LLM_MODEL` defaults to `gemini-2.5-flash`
+- `VITE_API_BASE_URL` is the backend API base URL used by the frontend
+- `VITE_USE_MOCK=1` makes the frontend use mock data instead of calling the backend
+- `VITE_DEMO_SEED=1` preloads demo data in the frontend
+
+Important:
+
+- Never commit real API keys to GitHub
+- Do not upload the `.env` file if it contains secrets
+
+## 5. Install Backend Dependencies
+
+Run the following commands in the project root:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+If you already have a virtual environment, activate it and install the dependencies there.
+
+## 6. Start the Backend
+
+Run this command in the project root:
+
+```powershell
+uvicorn app.server:app --host 127.0.0.1 --port 8000
+```
+
+After the server starts, you can open:
+
+- Health check: `http://127.0.0.1:8000/health`
+
+Main backend endpoint:
+
+- `POST /api/v1/agent/generate_itinerary`
+
+Request example:
+
+```json
+{
+  "input": "I am traveling from Kuala Lumpur to Seoul alone from 2026-05-01 to 2026-05-04"
+}
+```
+
+Response structure:
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "input": "original user input",
+    "flights": [],
+    "hotels": [],
+    "views": [],
+    "output": "natural language summary generated by the AI"
+  }
+}
+```
+
+Field summary:
+
+- `flights`: list of flight results
+- `hotels`: list of hotel results
+- `views`: list of attraction results
+- `output`: natural language itinerary summary shown in the frontend
+
+## 7. Start the Frontend
+
+Run these commands inside the frontend directory:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+After startup, the terminal usually prints a local URL such as:
+
+- `http://localhost:5173`
+
+If the backend is already running and `VITE_API_BASE_URL` is configured correctly, you can enter a travel request in the page and generate an itinerary.
+
+## 8. Simplest Usage Flow
+
+Recommended order:
+
+### Option 1: Full End-to-End Run
+
+1. Create and configure `.env` in the project root
+2. Start the backend with `uvicorn app.server:app --host 127.0.0.1 --port 8000`
+3. Enter `frontend/`
+4. Install frontend dependencies with `npm install`
+5. Start the frontend with `npm run dev`
+6. Enter a travel request in the page
+7. Click `Generate Itinerary`
+
+Example input:
+
+```text
+I am traveling from Kuala Lumpur to Seoul alone from 2026.5.1 to 2026.5.4
+```
+
+### Option 2: View Only the Frontend
+
+If you do not want to configure backend keys yet, set this in `frontend/.env.local`:
+
+```env
+VITE_USE_MOCK=1
+```
+
+Then run:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will use mock data directly, which is useful if you only want to preview the UI.
+
+## 9. Run Demo Scripts Separately
+
+### Main Agent Demo
+
+Run in the project root:
+
+```powershell
+python app/agents/main_agent.py
+```
+
+This script will:
+
+- Use a default travel query
+- Run the main agent workflow
+- Print the dispatch request
+- Print the normalized result
+
+### Attraction Tool Minimal Demo
+
+Run in the project root:
+
+```powershell
 python app/agents/attraction_demo.py
 ```
 
-### 5) 与 Agent 集成
-`app/agents/main_agent.py` 已注册 `attraction_information_tool`，Agent 在生成 itinerary 时可调用该工具补充：
-- 营业时间
-- 建议游玩时长
-- 门票价格
-- 图片链接与来源
+This script shows:
 
-## 后端quick start
+- How to call `get_attraction_info`
+- How to insert attraction data into a single-day itinerary
 
-uvicorn app.server:app --host 127.0.0.1 --port 8000
+## 10. Execution Flow
+
+After the user enters a natural language request, the overall flow is roughly:
+
+1. The frontend sends the user input to the backend API
+2. The backend receives the request in `app/server.py`
+3. `app/agents/main_agent.py` parses the user input
+4. The main workflow calls:
+   - flight agent
+   - hotel agent
+   - attraction agent
+   - transportation-related logic
+5. The backend normalizes the results into one standard structure
+6. The backend generates a natural language summary in `output`
+7. The frontend shows `output` in the AI Answer panel
+8. The frontend transforms `flights`, `hotels`, and `views` into timeline items
+
+## 11. Key Files
+
+- `app/server.py`: backend API entry
+- `app/agents/main_agent.py`: main orchestration workflow
+- `app/agents/attraction_demo.py`: minimal attraction demo
+- `app/tools/attraction_tool.py`: core attraction search tool
+- `app/tools/flight_tool.py`: flight tool
+- `app/tools/hotel_tool.py`: hotel tool
+- `frontend/src/components/ItineraryForm.vue`: frontend input form
+- `frontend/src/stores/itinerary.js`: frontend request logic and state management
+
+## 12. Testing and Troubleshooting
+
+Existing test scripts are located in `app/tests/`.
+
+You can start with a single test file, for example:
+
+```powershell
+python app/tests/test_main_agent.py
+```
+
+If something fails, check these items first:
+
+- Whether the virtual environment is activated
+- Whether `pip install -r requirements.txt` has been run
+- Whether `SERPAPI_API_KEY` is configured
+- Whether `GOOGLE_API_KEY` is configured
+- Whether the backend URL matches `VITE_API_BASE_URL`
+
+## 13. Common Issues
+
+### 1) Clicking the button in the frontend returns no result
+
+Possible reasons:
+
+- The backend is not running
+- `VITE_API_BASE_URL` is not configured
+- The API URL is wrong
+- API keys are missing, causing backend errors
+
+### 2) Dependency installation fails
+
+Possible reasons:
+
+- The Python version is too new or too old
+- The virtual environment is not activated
+- Package download failed because of network issues
+
+Python 3.11 and Node.js 22.x are recommended.
+
+### 3) I only want to preview the page without configuring the backend
+
+Add this to `frontend/.env.local`:
+
+```env
+VITE_USE_MOCK=1
+```
+
+The frontend will then show mock data directly.
+
+## 14. Team Collaboration Rules
+
+### Before You Commit
+
+- Do not commit real secrets from `.env`
+- Do not push directly to `main`
+- Do not commit `venv` or `node_modules`
+
+### Recommended Branch Workflow
+
+```powershell
+git checkout main
+git pull origin main
+git checkout -b feature/feature-name
+```
+
+After development:
+
+```powershell
+git add .
+git commit -m "add xxx feature"
+git push origin feature/feature-name
+```
+
+Then create a Pull Request on GitHub.
+
+### Naming Rules
+
+- Use snake_case for regular file names
+- Put test files under `tests/`
+- Use `test_*.py` for test file names
+
+## 15. Additional References
+
+- Virtual environment setup: `Install_venv_and_dependencies.md`
+- Attraction tool explanation: `attraction_tool_explanation.pdf`
+- Frontend guide: `frontend/README.md`
